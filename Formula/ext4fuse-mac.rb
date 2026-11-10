@@ -8,13 +8,13 @@ class Ext4fuseMac < Formula
   # homebrew-core's ext4fuse is Linux-only ("on macOS, requires closed-source
   # macFUSE"). macFUSE ships the libfuse 2.x userspace in /usr/local, which is
   # what this formula compiles against.
-  depends_on :macos
   depends_on "pkgconf" => :build
+  depends_on :macos
 
   def install
     pc = Pathname("/usr/local/lib/pkgconfig/fuse.pc")
     dylib = Pathname("/usr/local/lib/libfuse.2.dylib")
-    unless pc.exist? && dylib.exist?
+    if !pc.exist? || !dylib.exist?
       raise "macFUSE not found (#{pc} / #{dylib} missing). " \
             "Install it first: brew install --cask macfuse"
     end

@@ -22,6 +22,15 @@ System Settings, Privacy and Security:
     brew tap nolteb/fuse
     brew install nolteb/fuse/ext4fuse-mac
 
+## Troubleshooting
+
+- `Error: Refusing to load formula nolteb/fuse/... from untrusted tap`
+  (Homebrew requires explicit trust for third-party taps; usually a fresh
+  `brew install nolteb/fuse/ext4fuse-mac` records it automatically, but it
+  gets invalidated if the tap is re-tapped from a different remote):
+
+      brew trust nolteb/fuse
+
 ## Why this exists
 
 - `ext2fuse` (homebrew-core): disabled 2026-03-06, Linux-only, 2008 codebase, no ext4 support.

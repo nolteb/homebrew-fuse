@@ -9,17 +9,40 @@ class Ext4fuseMac < Formula
   # macFUSE"). macFUSE ships the libfuse 2.x userspace in /usr/local, which is
   # what this formula compiles against.
   depends_on :macos
-  # macFUSE is a cask; cask dependencies in formulae are unreliable, so we
-  # check for its /usr/local libfuse at build time (see install).
   depends_on "pkgconf" => :build
 
   def install
-    pkgconfig = "/usr/local/lib/pkgconfig/fuse.pc"
-    unless File.exist?(pkgconfig)
-      raise "macFUSE not found (#{pkgconfig} missing). " \
+    pc = Pathname("/usr/local/lib/pkgconfig/fuse.pc")
+    dylib = Pathname("/usr/local/lib/libfuse.2.dylib")
+    unless pc.exist? && dylib.exist?
+      raise "macFUSE not found (#{pc} / #{dylib} missing). " \
             "Install it first: brew install --cask macfuse"
     end
-    ENV["PKG_CONFIG_PATH"] = "/usr/local/lib/pkgconfig"
+
+    # Brew sandboxes build subprocesses and they cannot read /usr/local, so
+    # stage macFUSE's libfuse headers and dylib into the build directory and
+    # point pkg-config at the staged copies. The installed binary keeps the
+    # dylib's absolute install name (/usr/local/lib/libfuse.2.dylib), which
+    # resolves at runtime because macFUSE is a prerequisite.
+    staged = Pathname("macfuse")
+    (staged/"fuse").mkpath
+    (staged/"lib").mkpath
+    (staged/"pkgconfig").mkpath
+    Dir["/usr/local/include/fuse/*.h"].each do |header|
+      cp header, staged/"fuse"/File.basename(header)
+    end
+    cp dylib, staged/"lib"/"libfuse.2.dylib"
+    ln_sf "libfuse.2.dylib", staged/"lib"/"libfuse.dylib"
+    (staged/"pkgconfig"/"fuse.pc").write <<~PC
+      prefix=#{staged.expand_path}
+      Name: fuse
+      Description: Filesystem in Userspace (macFUSE, staged)
+      Version: #{pc.read[/^Version: (.+)$/, 1].to_s.strip}
+      Libs: -L${prefix}/lib -lfuse -pthread
+      Cflags: -I${prefix}/fuse -D_FILE_OFFSET_BITS=64
+    PC
+
+    ENV["PKG_CONFIG_PATH"] = (staged/"pkgconfig").to_s
     system "make"
     bin.install "ext4fuse"
   end

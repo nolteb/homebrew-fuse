@@ -8,7 +8,7 @@ userspace).
 
 | Formula | What it does |
 |---|---|
-| `ext4fuse-mac` | Read-only ext4 FUSE driver, built against macFUSE's libfuse 2.x in /usr/local. Mount with: `sudo ext4fuse /dev/diskN /mnt/point -o allow_other` |
+| `ext4fuse-mac` | Read-only ext4 FUSE driver, built against macFUSE's libfuse 2.x in /usr/local. Includes a patch fixing the upstream argument parser (options like `-o allow_other` were silently stripped). Mount as your user with `chown $(id -un) /dev/diskNs1` + `ext4fuse /dev/diskN /Volumes/Name`, or use the `ext4-mount` helper pattern. |
 
 ## Prerequisites
 
